@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -f config.* src/symbols.rds \
+    src/*.o src/*.d src/*.a src/*.dll src/*.so src/*.rc */*~ *~

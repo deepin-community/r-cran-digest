@@ -1,0 +1,67 @@
+This is the Debian GNU/Linux r-cran-digest package of digest, an R
+package providing 'hash digests' of (serialized) R objects. The digest
+package was was written by Dirk Eddelbuettel, with contributions by
+Antoine Lucas, Jarek Tuszynski, Henrik Bengtsson, Simon Urbanek, Mario
+Frasca and Bryan Lewis.
+
+This package was created by Dirk Eddelbuettel <edd@debian.org> (who is
+also the upstream author/maintainer).
+
+The sources were downloaded from the main CRAN site
+	http://cran.r-project.org/src/contrib/
+and are also available from all CRAN mirrors as e.g.
+	http://cran.us.r-project.org/src/contrib/
+as well as from 
+        http://dirk.eddelbuettel.com/code/digest.html
+
+The package was renamed from its upstream name 'digest' to
+'r-cran-digest' to fit the pattern of CRAN (and non-CRAN) Debian R
+packages.
+
+Copyright (C) 2003 - 2011  Dirk Eddelbuettel <edd@debian.org>                                                            
+
+Portions Copyright (C) 2001-2003  Christophe Devine
+Portions Copyright (C) 1995-2004  Jean-loup Gailly and Mark Adler
+Portions Copyright (C) 1995-2004  Jean-loup Gailly
+Portions Copyright (C) 1995-2003  Mark Adler
+Portions Copyright (C) 1995-2003  Jean-loup Gailly
+
+License: GPL (>= 2)
+
+On a Debian GNU/Linux system, the GPL license (v2) is included in the
+file /usr/share/common-licenses/GPL-2.
+
+For reference, the upstream DESCRIPTION file is included below:
+
+   Package: digest
+   Version: 0.5.1
+   Date: $Date: 2011-09-20 17:15:07 -0500 (Tue, 20 Sep 2011) $
+   Author: Dirk Eddelbuettel <edd@debian.org> with contributions by
+           Antoine Lucas, Jarek Tuszynski, Henrik Bengtsson, Simon
+           Urbanek, Mario Frasca and Bryan Lewis.
+   Maintainer: Dirk Eddelbuettel <edd@debian.org>
+   Title: Create cryptographic hash digests of R objects
+   Description: The digest package provides a function 'digest()' for the
+           creation of hash digests of arbitrary R objects (using the md5,
+           sha-1, sha-256 and crc32 algorithms) permitting easy comparison
+           of R language objects, as well as a function 'hmac()' to create
+           hash-based message authentication code.
+    .
+    The md5 algorithm by Ron Rivest is specified in RFC 1321, the SHA-1 and
+           SHA-256 algorithms are specified in FIPS-180-1 and FIPS-180-2,
+           and the crc32 algorithm is described in
+           ftp://ftp.rocksoft.com/cliens/rocksoft/papers/crc_v3.txt. For
+           md5, sha-1 and sha-256, this packages uses small standalone
+           implementations that were provided by Christophe Devine. For
+           crc32, code from the zlib library is used.
+    .
+    Please note that this package is not meant to be deployed for
+           cryptographic purposes for which more comprehensive (and widely
+           tested) libraries such as OpenSSL should be used.
+   Depends: R (>= 2.4.1)
+   License: GPL-2
+   URL: http://dirk.eddelbuettel.com/code/digest.html
+   Packaged: 2011-09-20 22:15:29.511082 UTC; edd
+   Repository: CRAN
+   Date/Publication: 2011-09-21 19:07:31
+   

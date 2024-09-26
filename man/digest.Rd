@@ -15,7 +15,8 @@
 \usage{
 digest(object, algo=c("md5", "sha1", "crc32", "sha256", "sha512",
                       "xxhash32", "xxhash64", "murmur32", "spookyhash",
-                      "blake3"), serialize=TRUE, file=FALSE,
+                      "blake3", "crc32c", "xxh3_64", "xxh3_128"),
+       serialize=TRUE, file=FALSE,
        length=Inf, skip="auto", ascii=FALSE, raw=FALSE, seed=0,
        errormode=c("stop","warn","silent"),
        serializeVersion=.getSerializeVersion())
@@ -27,7 +28,8 @@ digest(object, algo=c("md5", "sha1", "crc32", "sha256", "sha512",
   \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32}, \code{spookyhash} and \code{blake3}.}
+    \code{murmur32}, \code{spookyhash}, \code{blake3}, \code{crc32c},
+    \code{xxh3_64}, and \code{xxh3_128}.}
   \item{serialize}{A logical variable indicating whether the object
     should be serialized using \code{serialize} (in ASCII
     form). Setting this to \code{FALSE} allows to compare the digest
@@ -88,7 +90,8 @@ digest(object, algo=c("md5", "sha1", "crc32", "sha256", "sha512",
 
   For sha-512, a standalone implementation from Aaron Gifford is used.
 
-  For xxhash32 and xxhash64, the reference implementation by Yann Collet is used.
+  For xxhash32, xxhash64, xxh3_64 and xxh3_128 the reference implementation
+  by Yann Collet is used.
 
   For murmur32, the progressive implementation by Shane Day is used.
 
@@ -97,6 +100,9 @@ digest(object, algo=c("md5", "sha1", "crc32", "sha256", "sha512",
   memory-efficient incremental calculation of the hash is by Gabe Becker.
 
   For blake3, the C implementation by Samuel Neves and Jack O'Connor is used.
+
+  For crc32c, the portable (i.e. non-hardware accelerated) version from
+  Google is used.
 
   Please note that this package is not meant to be used for
   cryptographic purposes for which more comprehensive (and widely
@@ -145,6 +151,7 @@ digest(object, algo=c("md5", "sha1", "crc32", "sha256", "sha512",
 
   \url{https://github.com/BLAKE3-team/BLAKE3/} for the original source code of blake3.
 
+  \url{https://github.com/google/crc32c} for the (non-hardware-accelerated) crc32c code.
 }
 \author{Dirk Eddelbuettel \email{edd@debian.org} for the \R interface;
   Antoine Lucas for the integration of crc32; Jarek Tuszynski for the
@@ -297,7 +304,9 @@ for (i in seq(along=spookyInput)) {
     # skip = 30 skips the serialization header and just hashes the strings
     spooky <- digest(spookyInput[i], algo="spookyhash", skip = 30)
     cat(spooky, "\n")
-    stopifnot(identical(spooky, spookyOutput[i]))
+    ## we can only compare to reference output on little-endian systems
+    if (isTRUE(.Call(digest:::is_little_endian)))
+        stopifnot(identical(spooky, spookyOutput[i]))
 }
 
 ## blake3 example
@@ -314,6 +323,15 @@ for (i in seq(along=blake3Input)) {
     blake3 <- digest(blake3Input[i], algo="blake3", serialize=FALSE)
     cat(blake3, "\n")
     stopifnot(identical(blake3, blake3Output[i]))
+}
+
+## crc32c
+crc32cInput <- c("123456789", "The quick brown fox jumps over the lazy dog")
+crc32cOutput <- c("e3069283", "22620404")
+for (i in seq_along(crc32cInput)) {
+    crc32c <- digest(crc32cInput[i], algo="crc32c", serialize=FALSE)
+    cat(crc32c, "\n")
+    stopifnot(identical(crc32c, crc32cOutput[i]))
 }
 
 # example of a digest of a standard R list structure

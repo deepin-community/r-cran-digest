@@ -5,3 +5,7 @@
 
 %:
 	dh $@ --buildsystem R
+
+override_dh_auto_install:
+	dh_auto_install -- prefix=/usr
+	rm debian/r-cran-digest/usr/lib/R/site-library/digest/doc/sha1.html

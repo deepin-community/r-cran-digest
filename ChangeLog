@@ -1,3 +1,226 @@
+2024-08-19  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.37
+
+2024-08-18  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Authors@R): Added
+
+2024-08-15  Kevin Ushey  <kevinushey@gmail.com>
+
+	* src/raes.c: Calloc -> R_Calloc; Free -> R_Free
+
+2024-07-15  Dirk Eddelbuettel  <edd@debian.org>
+
+	* README.md: Switch some URLs from http to https
+
+2024-06-23  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.36
+
+	* src/digest.c (is_little_endian): Define alternate helper too
+	* man/digest.Rd: Compare to spookyhash ref only on little endian
+
+2024-06-22  Dirk Eddelbuettel  <edd@debian.org>
+
+	* src/digest.c (is_big_endian): Use endian-ness definition from
+	Rconfig.h and define one-line helper
+
+	* inst/tinytest/test_digest.R: Skip spookyhash test on big endian
+
+2024-06-21  Sergey Fedorov  <vital.had@gmail.com>
+
+	* src/blake3.c: Upstream patch for big endian systems
+	* src/blake3_impl.h: Idem
+	* src/blake3_portable.c: Idem
+
+2024-06-15  Dirk Eddelbuettel  <edd@debian.org>
+
+	* .github/workflows/ci.yaml (jobs): Update to r-ci-setup action
+
+2024-05-16  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* README.md: Use tinyverse.netlify.app for dependency badge
+
+	* src/spooky_serialize.cpp: Several small updates to please clang++
+	* src/SpookyV2.cpp: Idem
+
+	* .github/workflows/ci.yaml: Show logs in case of failure
+
+2024-03-12  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* src/spooky_serialize.cpp: Use R_NO_REMAP, add three Rf_ prefixes
+
+2024-03-10  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.35
+
+	* src/xxhash.h: Update to current release 0.8.2
+	* src/xxhash.c: Idem
+	* src/digest.c: Support added xxhash algorithms xxh3_64 and xxh3_128
+	* R/digest.R: Idem
+	* R/vdigest.R: Support xxh3_64 and xxh3_128 in vectorized mode
+	* inst/tinytest/test_digest.R: Add tests for xxh3_64 and xxh3_128
+	* man/digest.Rd: Documentation
+	* man/vdigest.Rd: Idem
+	* DESCRIPTION (Description): Mention xxh3_64 and xxh3_128
+	* README.md: Idem
+
+	* src/digest.c (digest): Consistently print uint64_t via PRIx
+
+2024-01-11  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.34
+
+2024-01-05  Dirk Eddelbuettel  <edd@debian.org>
+
+	* .github/workflows/ci.yaml (jobs): Update to actions/checkout@v4
+
+2024-01-04  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* src/digest.c (open_with_widechar_on_windows): Correct format
+	specification in error() call on Windows
+
+2023-08-23  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* DESCRIPTION: Add Michael contributors
+	* README.md: Idem
+
+2023-08-03  Michael Chirico  <chiricom@google.com>
+
+        * tests/tinytest.R: Define `expect_length()` if needed (it is only
+        available from tinytest 1.4.1 released February 2023)
+        * src/digest.c: `#include <stdint.h>` for `uint32_t`
+
+2023-06-28  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.33
+
+	* src/crc32c/crc32c_config.h: Minor comment edit
+
+2023-06-27  Sergey Fedorov  <vital.had@gmail.com>
+
+	* src/crc32c/crc32c_config.h: Use endian macros to set endianness
+
+2023-06-27  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* src/crc32c/crc32c_config.h: Undefine HAVE_BUILTIN_PREFETCH and
+	HAVE_MM_PREFETCH for maximum portability and builds on M1/M2/Arm64
+
+2023-06-26  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.32
+
+	* README.md: Add r-universe badge
+	* README.md: Add crc32c, and link to docs site, to Overview
+
+2023-06-25  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* DESCRIPTION (Author): Add Dean Attali
+
+2023-06-25  Dean Attali  <daattali@gmail.com>
+
+        * R/AES.R: Add `padding` parameter to `AES()` to allow CBC mode to use
+        PKCS#7 padding
+        * inst/tinytest/test_aes.R: Add tests for new `padding` parameter
+        * man/AES.Rd: Document the `raw` argument of `AES()$decrypt()` and the
+        new `padding` parameter
+
+2023-04-30  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll micro version and date
+
+	* R/vdigest.R: Enable vectorised operation for blake3 and crc32v
+	* man/vdigest.Rd: Update documentation
+
+2023-04-29  Dirk Eddelbuettel  <edd@debian.org>
+
+	* src/digest.c (digest): Support crc33c
+	* man/digest.Rd: Document crc32c option, add two examples
+
+	* src/crc32c.h: Adding new CRC32C implementation
+	* src/crc32c.cpp: Idem
+	* src/crc32c_portable.cpp: Idem; also added codecov nocov
+	* src/crc32c/*: Idem
+
+	* src/Makevars: Added for PKG_CPPFLAGS
+	* src/Makevars.win: Idem
+
+	* R/init.R: Added some codecov nocov
+
+	* .codecov.yml (coverage): Added coverage diff settings
+
+2023-02-05  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll minor version
+
+	* src/Makevars: No longer require CXX_STD
+
+2022-12-10  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.31
+
+	* src/digest.c: Replace sprintf with snprintf
+
+	* .editorconfig: Added
+	* .Rbuildignore: Updated
+
+2022-11-05  Dirk Eddelbuettel  <edd@debian.org>
+
+	* .github/workflows/ci.yaml (jobs): Update to actions/checkout@v3
+
+2022-10-17  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.30
+
+	* src/crc32.c: Modernize three function signatures to current C
+	standards to appease clang-15 now used by CRAN
+
+	* src/sha2.c (SHA512_End): Align two function signatures to their
+	prototypes to appease gcc-12
+
+2022-10-02  Dirk Eddelbuettel  <edd@debian.org>
+
+	* docs/mkdmt-src/src/index.md: Several small updates with upgrade to
+	Material for MkDocs 8.5.5
+
+2021-11-30  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Release 0.6.29
+
+	* src/digest.c (digest): Accomodate Windows UCRT build
+	* man/AES.Rd: Remove one URL that upsets the URL checker
+	* README.md: Update one URL that upsets the URL checker
+
+2021-11-20  Dirk Eddelbuettel  <edd@debian.org>
+
+	* DESCRIPTION (Version, Date): Roll minor version
+
+	* vignettes/sha1.md: Renamed from .Rmd, corrected code block syntax
+
+2021-11-19  Dirk Eddelbuettel  <edd@debian.org>
+
+ 	* DESCRIPTION (VignetteBuilder): Converted to simplermarkdown engine
+	* vignettes/sha1.Rmd: Idem
+	* vignettes/water.css: Added
+
+2021-11-05  Dirk Eddelbuettel  <edd@debian.org>
+
+ 	* README.md: Remove Travis badge
+	* .travis.yml: Remove Travis YAML config
+
 2021-09-23  Dirk Eddelbuettel  <edd@debian.org>
 
 	* DESCRIPTION (Version, Date): Release 0.6.28

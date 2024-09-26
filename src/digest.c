@@ -1,8 +1,8 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
 
   digest -- hash digest functions for R
 
-  Copyright (C) 2003 - 2016  Dirk Eddelbuettel <edd@debian.org>
+  Copyright (C) 2003 - 2024  Dirk Eddelbuettel <edd@debian.org>
 
   This file is part of digest.
 
@@ -21,6 +21,7 @@
 
 */
 
+#include <stdint.h> // for uint32_t
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -37,6 +38,7 @@
 #include "xxhash.h"
 #include "pmurhash.h"
 #include "blake3.h"
+#include "crc32c.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -58,7 +60,7 @@ FILE* open_with_widechar_on_windows(const char* txt) {
     }
     buf = (wchar_t*) R_alloc(len, sizeof(wchar_t));
     if (buf == NULL) {
-        error("Could not allocate buffer of size: %ll", len);
+        error("Could not allocate buffer of size: %llu", len);
     }
 
     MultiByteToWideChar(CP_UTF8, 0, txt, -1, buf, len);
@@ -124,7 +126,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
 
         if (!leaveRaw)
             for (j = 0; j < 16; j++)
-                sprintf(output + j * 2, "%02x", md5sum[j]);
+                snprintf(output + j * 2, 3, "%02x", md5sum[j]);
 
         break;
     }
@@ -141,7 +143,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
 
         if (!leaveRaw)
             for ( j = 0; j < 20; j++ )
-                sprintf( output + j * 2, "%02x", sha1sum[j] );
+                snprintf( output + j * 2, 3, "%02x", sha1sum[j] );
 
         break;
     }
@@ -152,7 +154,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
         val  = digest_crc32(0L, 0, 0);
         val  = digest_crc32(val, (unsigned char*) txt, (unsigned) l);
 
-        sprintf(output, "%08x", (unsigned int) val);
+        snprintf(output, 128, "%08x", (unsigned int) val);
         break;
     }
     case 4: {     /* sha256 case */
@@ -168,7 +170,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
 
         if (!leaveRaw)
             for ( j = 0; j < 32; j++ )
-                sprintf( output + j * 2, "%02x", sha256sum[j] );
+                snprintf( output + j * 2, 3, "%02x", sha256sum[j] );
 
         break;
     }
@@ -197,22 +199,18 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
         break;
     }
     case 6: {     /* xxhash32 case */
-        unsigned int val =  XXH32(txt, nChar, seed);
-        sprintf(output, "%08x", val);
+        XXH32_hash_t val =  XXH32(txt, nChar, seed);
+        snprintf(output, 128, "%08x", val);
         break;
     }
     case 7: {     /* xxhash64 case */
-        unsigned long long val =  XXH64(txt, nChar, seed);
-#ifdef WIN32
-        sprintf(output, "%016" PRIx64, val);
-#else
-        sprintf(output, "%016llx", val);
-#endif
+        XXH64_hash_t val =  XXH64(txt, nChar, seed);
+        snprintf(output, 128, "%016" PRIx64, val);
         break;
     }
     case 8: {     /* MurmurHash3 32 */
         unsigned int val = PMurHash32(seed, txt, nChar);
-        sprintf(output, "%08x", val);
+        snprintf(output, 128, "%08x", val);
         break;
     }
     case 10: {     /* blake3 */
@@ -226,9 +224,25 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
             memcpy(output, val, BLAKE3_OUT_LEN);
         } else {
             for (size_t i = 0; i < BLAKE3_OUT_LEN; i++) {
-                sprintf(output + i * 2, "%02x", val[i]);
+                snprintf(output + i * 2, 3, "%02x", val[i]);
             }
         }
+        break;
+    }
+    case 11: {		/* crc32c */
+        uint32_t crc = 0;       /* initial value, can be zero */
+        crc = crc32c_extend(crc, (const uint8_t*) txt, (size_t) nChar);
+        snprintf(output, 128, "%08x", crc);
+        break;
+    }
+    case 12: {		/* xxh3_64bits */
+        XXH64_hash_t val =  XXH3_64bits_withSeed(txt, nChar, seed);
+        snprintf(output, 128, "%016" PRIx64, val);
+        break;
+    }
+    case 13: {		/* xxh3_128bits */
+        XXH128_hash_t val =  XXH3_128bits_withSeed(txt, nChar, seed);
+        snprintf(output, 128, "%016" PRIx64 "%016" PRIx64, val.high64, val.low64);
         break;
     }
     case 101: {     /* md5 file case */
@@ -255,7 +269,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
         memcpy(output, md5sum, 16);
         if (!leaveRaw)
             for (j = 0; j < 16; j++)
-                sprintf(output + j * 2, "%02x", md5sum[j]);
+                snprintf(output + j * 2, 3, "%02x", md5sum[j]);
         break;
     }
     case 102: {     /* sha1 file case */
@@ -281,7 +295,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
         memcpy(output, sha1sum, 20);
         if (!leaveRaw)
             for ( j = 0; j < 20; j++ )
-                sprintf( output + j * 2, "%02x", sha1sum[j] );
+                snprintf( output + j * 2, 3, "%02x", sha1sum[j] );
         break;
     }
     case 103: {     /* crc32 file case */
@@ -300,7 +314,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
             while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0)
                 val  = digest_crc32(val , buf, (unsigned) nChar);
         }
-        sprintf(output, "%08x", (unsigned int) val);
+        snprintf(output, 128, "%08x", (unsigned int) val);
         break;
     }
     case 104: {     /* sha256 file case */
@@ -326,7 +340,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
         memcpy(output, sha256sum, 32);
         if (!leaveRaw)
             for ( j = 0; j < 32; j++ )
-                sprintf( output + j * 2, "%02x", sha256sum[j] );
+                snprintf( output + j * 2, 3, "%02x", sha256sum[j] );
         break;
     }
     case 105: {     /* sha2-512 file case */
@@ -393,10 +407,10 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
               }
             }
         }
-        unsigned int val =  XXH32_digest(state);
+        XXH32_hash_t val =  XXH32_digest(state);
         XXH32_freeState(state);
 
-        sprintf(output, "%08x", val);
+        snprintf(output, 128, "%08x", val);
         break;
     }
     case 107: {     /* xxhash64 */
@@ -419,20 +433,15 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
             }
         } else {
             while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0) {
-              XXH_errorcode const updateResult = XXH64_update(state, buf, nChar);
+                XXH_errorcode const updateResult = XXH64_update(state, buf, nChar);
               if (updateResult == XXH_ERROR) {
                 error("Error in `XXH64_update()`"); 		/* #nocov */
               }
             }
         }
-        unsigned long long val =  XXH64_digest(state);
+        XXH64_hash_t val =  XXH64_digest(state);
         XXH64_freeState(state);
-
-#ifdef WIN32
-        sprintf(output, "%016" PRIx64, val);
-#else
-        sprintf(output, "%016llx", val);
-#endif
+        snprintf(output, 128, "%016" PRIx64, val);
         break;
     }
     case 108: {     /* murmur32 */
@@ -457,7 +466,7 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
         }
         unsigned int val = PMurHash32_Result(h1, carry, total_length);
 
-        sprintf(output, "%08x", val);
+        snprintf(output, 128, "%08x", val);
         break;
     }
     case 110: {     /* blake3 file case */
@@ -483,11 +492,92 @@ SEXP digest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP Se
             memcpy(output, val, BLAKE3_OUT_LEN);
         } else {
             for (size_t i = 0; i < BLAKE3_OUT_LEN; i++) {
-                sprintf(output + i * 2, "%02x", val[i]);
+                snprintf(output + i * 2, 3, "%02x", val[i]);
             }
         }
         break;
     }
+    case 111: {		/* crc32c */
+        unsigned char buf[BUF_SIZE];
+        uint32_t crc = 0;
+
+        if (skip > 0) fseek(fp, skip, SEEK_SET);
+        if (length>=0) {
+            while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0 && length>0) {
+                if (nChar>length) nChar=length;
+                crc = crc32c_extend(crc, (const uint8_t*) buf, (size_t) nChar);
+                length -= nChar;
+            }
+        } else {
+            while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0)
+                crc = crc32c_extend(crc, (const uint8_t*) buf, (size_t) nChar);
+        }
+        snprintf(output, 128, "%08x", (unsigned int) crc);
+        break;
+    }
+    case 112: {     /* xxh3_64 */
+        unsigned char buf[BUF_SIZE];
+        XXH3_state_t* const state = XXH3_createState();
+
+        if (skip > 0) fseek(fp, skip, SEEK_SET);
+        XXH_errorcode const resetResult = XXH3_64bits_reset(state);
+        if (resetResult == XXH_ERROR) {
+            error("Error in `XXH3_reset()`"); 				/* #nocov */
+        }
+        if (length>=0) {
+            while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0 && length>0) {
+                if (nChar>length) nChar=length;
+                XXH_errorcode const updateResult = XXH3_64bits_update(state, buf, nChar);
+                if (updateResult == XXH_ERROR) {
+                    error("Error in `XXH3_64bits_update()`"); 		/* #nocov */
+                }
+                length -= nChar;
+            }
+        } else {
+            while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0) {
+                XXH_errorcode const updateResult = XXH3_64bits_update(state, buf, nChar);
+                if (updateResult == XXH_ERROR) {
+                    error("Error in `XXH3_64bit_update()`"); 		/* #nocov */
+                }
+            }
+        }
+        XXH64_hash_t val =  XXH3_64bits_digest(state);
+        XXH3_freeState(state);
+        snprintf(output, 128, "%016" PRIx64, val);
+        break;
+    }
+    case 113: {     /* xxh3_128 */
+        unsigned char buf[BUF_SIZE];
+        XXH3_state_t* const state = XXH3_createState();
+
+        if (skip > 0) fseek(fp, skip, SEEK_SET);
+        XXH_errorcode const resetResult = XXH3_128bits_reset(state);
+        if (resetResult == XXH_ERROR) {
+            error("Error in `XXH3_reset()`"); 				/* #nocov */
+        }
+        if (length>=0) {
+            while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0 && length>0) {
+                if (nChar>length) nChar=length;
+                XXH_errorcode const updateResult = XXH3_128bits_update(state, buf, nChar);
+                if (updateResult == XXH_ERROR) {
+                    error("Error in `XXH3_128bits_update()`"); 		/* #nocov */
+                }
+                length -= nChar;
+            }
+        } else {
+            while ( ( nChar = fread( buf, 1, sizeof( buf ), fp ) ) > 0) {
+                XXH_errorcode const updateResult = XXH3_128bits_update(state, buf, nChar);
+                if (updateResult == XXH_ERROR) {
+                    error("Error in `XXH3_128bit_update()`"); 		/* #nocov */
+                }
+            }
+        }
+        XXH128_hash_t val =  XXH3_128bits_digest(state);
+        XXH3_freeState(state);
+        snprintf(output, 128, "%016" PRIx64 "%016" PRIx64, val.high64, val.low64);
+        break;
+    }
+
     default: {
         error("Unsupported algorithm code"); /* should not be reached due to test in R */ /* #nocov */
     }
@@ -529,4 +619,33 @@ SEXP vdigest(SEXP Txt, SEXP Algo, SEXP Length, SEXP Skip, SEXP Leave_raw, SEXP S
     }
     UNPROTECT(1);
     return ans;
+}
+
+
+// Also already used in sha2.h
+//
+// We can rely on WORDS_BIGENDIAN only be defined on big endian systems thanks to Rconfig.
+//
+// A number of other #define based tests are in other source files here for different hash
+// algorithm implementations notably crc32c, pmurhash, sha2 and xxhash
+//
+// A small and elegant test is also in package qs based on https://stackoverflow.com/a/1001373
+
+// edd 02 Dec 2013  use Rconfig.h to define BYTE_ORDER, unless already defined
+#ifndef BYTE_ORDER
+    // see sha2.c comments, and on the internet at large
+    #define LITTLE_ENDIAN 1234
+    #define BIG_ENDIAN    4321
+#ifdef WORDS_BIGENDIAN
+    #define BYTE_ORDER  BIG_ENDIAN
+#else
+    #define BYTE_ORDER  LITTLE_ENDIAN
+#endif
+#endif
+
+SEXP is_big_endian(void) {
+    return Rf_ScalarLogical(BYTE_ORDER == BIG_ENDIAN);
+}
+SEXP is_little_endian(void) {
+    return Rf_ScalarLogical(BYTE_ORDER == LITTLE_ENDIAN);
 }

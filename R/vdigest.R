@@ -1,7 +1,7 @@
 
 ##  vdigest -- Vectorist digest functions for R
 ##
-##  Copyright (C) 2019         Matthew de Queljoe and Dirk Eddelbuettel
+##  Copyright (C) 2019 - 2024  Matthew de Queljoe and Dirk Eddelbuettel
 ##
 ##  This file is part of digest.
 ##
@@ -19,14 +19,17 @@
 ##  along with digest.  If not, see <http://www.gnu.org/licenses/>.
 
 getVDigest <- function(algo = c("md5", "sha1", "crc32", "sha256", "sha512",
-                                 "xxhash32", "xxhash64", "murmur32", "spookyhash"),
+                                "xxhash32", "xxhash64", "murmur32", "spookyhash",
+                                "blake3", "crc32c", "xxh3_64", "xxh3_128"),
                         errormode=c("stop","warn","silent")){
     algo <- match.arg(algo, c("md5", "sha1", "crc32", "sha256", "sha512",
-                              "xxhash32", "xxhash64", "murmur32", "spookyhash"))
+                              "xxhash32", "xxhash64", "murmur32", "spookyhash",
+                              "blake3", "crc32c", "xxh3_64", "xxh3_128"))
     errormode <- match.arg(errormode, c("stop","warn","silent"))
     algoint <- algo_int(algo)
     non_streaming_algos <- c("md5", "sha1", "crc32", "sha256", "sha512",
-                             "xxhash32", "xxhash64", "murmur32")
+                             "xxhash32", "xxhash64", "murmur32", "blake3",
+                             "crc32c", "xxh3_64", "xxh3_128")
     if (algo %in% non_streaming_algos)
         return(non_streaming_digest(algo, errormode, algoint))
     streaming_digest(algo, errormode, algoint)
